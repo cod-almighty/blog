@@ -1,18 +1,14 @@
 package com.website.blog.Controller;
 
-import com.website.blog.Exceptions.CannotDeletePostException;
 import com.website.blog.Exceptions.PostNotFoundException;
 import com.website.blog.Models.Post;
 import com.website.blog.Repo.PostRepo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.util.ReflectionUtils;
 import org.springframework.web.bind.annotation.*;
 
-import java.lang.reflect.Field;
 import java.util.List;
-import java.util.Map;
 
 @RestController
 public class ApiControllers {
@@ -41,8 +37,8 @@ public class ApiControllers {
 //        }
 //    }
 
-    @GetMapping("/single")
-    public ResponseEntity<Post> getSinglePost(@RequestParam long id) {
+    @GetMapping("/read/{id}")
+    public ResponseEntity<Post> getSinglePost(@PathVariable long id) {
         Post post = postRepo.findById(id)
                 .orElseThrow(() -> new PostNotFoundException(id));
         return new ResponseEntity<Post>(post, HttpStatus.OK);
@@ -56,8 +52,8 @@ public class ApiControllers {
         return new ResponseEntity<String>(post.toString(), HttpStatus.OK);
     }
 
-    @PutMapping("/update")
-    public ResponseEntity<String> replacePost(@RequestParam long id, @RequestBody Post post) {
+    @PutMapping("/update/{id}")
+    public ResponseEntity<String> replacePost(@PathVariable long id, @RequestBody Post post) {
         Post replacedPost = postRepo.findById(id)
                 .orElseThrow(() -> new PostNotFoundException(id));
         replacedPost.setTitle(post.getTitle());
@@ -67,30 +63,26 @@ public class ApiControllers {
         return new ResponseEntity<String>(replacedPost.toString(), HttpStatus.OK);
     }
 
-    @PatchMapping("/update")
-    public ResponseEntity<String> editPost(@RequestParam long id, @RequestBody Map<Object, Object> fields) {
+    @PatchMapping("/update/{id}")
+    public ResponseEntity<String> editPost(@PathVariable long id, @RequestBody Post post) {
         Post updatedPost = postRepo.findById(id)
                 .orElseThrow(() -> new PostNotFoundException(id));
 
-        fields.forEach((k,v) -> {
-            Field field = ReflectionUtils.findField(Post.class, (String) k);
-            field.setAccessible(true);
-            ReflectionUtils.setField(field, updatedPost, v);
-        });
+        if (post.getTitle() != null) {
+            updatedPost.setTitle(post.getTitle());
+        }
+        if (post.getBody() != null) {
+            updatedPost.setTitle(post.getTitle());
+        }
         postRepo.save(updatedPost);
 
         return new ResponseEntity<String>(updatedPost.toString(), HttpStatus.OK);
     }
 
-    @DeleteMapping("/delete")
-    public ResponseEntity<String> deletePost(@RequestParam long id) {
+    @DeleteMapping("/delete/{id}")
+    public ResponseEntity<String> deletePost(@PathVariable long id) {
         Post deletedPost = postRepo.findById(id)
                 .orElseThrow(() -> new PostNotFoundException(id));
-        try {
-            postRepo.delete(deletedPost);
-        } catch (Exception e) {
-            throw new CannotDeletePostException(id, e);
-        }
 
         return new ResponseEntity<String>("id " + id + " has been deleted successfully", HttpStatus.OK);
     }
