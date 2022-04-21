@@ -1,5 +1,6 @@
 package com.website.blog.Controller;
 
+import com.website.blog.Exceptions.CannotDeletePostException;
 import com.website.blog.Exceptions.PostNotFoundException;
 import com.website.blog.Models.Post;
 import com.website.blog.Repo.PostRepo;
@@ -85,8 +86,12 @@ public class ApiControllers {
     public ResponseEntity<String> deletePost(@RequestParam long id) {
         Post deletedPost = postRepo.findById(id)
                 .orElseThrow(() -> new PostNotFoundException(id));
-        postRepo.delete(deletedPost);
+        try {
+            postRepo.delete(deletedPost);
+        } catch (Exception e) {
+            throw new CannotDeletePostException(id, e);
+        }
 
-        return new ResponseEntity<String>("Deleted post " + id, HttpStatus.OK);
+        return new ResponseEntity<String>("id " + id + " has been deleted successfully", HttpStatus.OK);
     }
 }
